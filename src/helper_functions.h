@@ -138,7 +138,7 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
     std::string line_pos;
 
     // Run over each single file 
-    while (getline(in_file_pos, line_pos) {
+    while (getline(in_file_pos, line_pos)) {
 
         std::istringstream iss_pos(line_pos);
 
@@ -166,7 +166,7 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
  * @param filename Name of file containing ground truth data
  * @output True if opening and reading file was succesful
  */
-inline bool read_gt_data(std::string filename, std::vector<ground_truth)& gt) {
+inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 
     // Get file of position measurements
     std::ifstream in_file_pos(filename.c_str(), std::ifstream::in);
@@ -201,6 +201,7 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth)& gt) {
         // Add to list of ground truths
         gt.push_back(single_gt);
     }
+    
     return true;
 } 
 

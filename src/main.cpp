@@ -81,6 +81,39 @@ int main(){
                         pf.prediction(delta_t, sigma_pos, previous_velocity, previous_yawrate);
                     }
 
+                    // Receive noisy observation data from simulator
+                    // sense_observations in JSON format
+                    // [{obs_x, obs_y},{obs_x, obs_y},...,{obs_x,obs_y}]
+                    vector<LandmarkObs> noisy_observations;
+                    string sense_observations_x = j[1]["sense_observations_x"];
+                    string sense_observations_y = j[1]["sense_observations_y"];
+
+                    vector<float> x_sense;
+                    std::istringstream iss_x(sense_observations_x);
+
+                    std::copy(std::istream_iterator<float>(iss_x),
+                    std::istream_iterator<float>(),
+                    std::back_inserter(x_sense)); 
+
+                    vector<float> y_sense;
+                    std::istringstream iss_y(sense_observations_y);
+
+                    std::copy(std::istream_iterator<float>(iss_y),
+                    std::istream_iterator<float>(),
+                    std::back_inserter(y_sense)); 
+
+                    for (int i = 0; i < x_sense.size(); ++i) {
+                        LandmarkObs obs;
+                        obs = {.x = x_sense[i], .y = y_sense[i]};
+
+                        noisy_observations.push_back(obs);
+                    }
+
+                    // Update the weights
+                    pf.updateWeights(sensor_range, sigma_landmark, noisy_observations, map);
+
+
+
                     //TODO completion of the rest of Particle filter logic
                     
                     //end telemetry section         

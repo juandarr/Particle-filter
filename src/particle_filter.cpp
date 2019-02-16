@@ -76,3 +76,12 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
     
 }
 
+void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
+                                     vector<LandmarkObs> observations) {
+    /**
+     * Find the predicted measurements that is closest to each observed measurement
+     *  and assign the observed measurement to this particular landmark.
+     */
+
+}
+

@@ -2,7 +2,7 @@
  * particle_filter.cpp
  * Particle filter class in 2 dimensions
  * 
- * Created on: Feb 02/2019
+ * Created on: Feb 15/2019
  * Author: Juan David Rios
  */
 
@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-//#include <helper_functions.h>
+#include <helper_functions.h>
 
 //for convenience
 using std::string;

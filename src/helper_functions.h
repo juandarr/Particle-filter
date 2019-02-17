@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include <map.h>
+#include "map.h"
 
 // for portability of M_PI (V. Studio, MinGW, etc.)
 #ifndef M_PI
@@ -239,7 +239,8 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
         LandmarkObs meas;
 
         // Set values
-        meas = { .x = local_x, .y = local_y};
+        meas.x = local_x;
+        meas.y = local_y;
 
         // Add to list of landmark observations
         observations.push_back(meas);
@@ -252,7 +253,7 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
  * Calculates the multivariate gaussian probability given the standard deviation, 
  * landmark location and observation in x/y dimensions
  */  
-double multi_gaussian(double std_x, double std_y, double ux, double uy, double x, double y) {
+inline double multi_gaussian(double std_x, double std_y, double ux, double uy, double x, double y) {
     // Define normalization factor in multivariate gaussian distribution
     double normalization;
     normalization = 1/(2 * M_PI * std_x * std_y);

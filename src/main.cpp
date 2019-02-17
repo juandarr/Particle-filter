@@ -2,8 +2,8 @@
 #include <uWS/uWS.h>
 #include <iostream>
 #include <string>
-#include <json.hpp>
-#include <particle_filter.h>
+#include "json.hpp"
+#include "particle_filter.h"
 
 //Using namespace classes
 using nlohmann::json;
@@ -13,7 +13,6 @@ using std::vector;
 // Checks if the SocketIO event has JSON data.
 // If there is data then JSON object in string format will be returned,
 // else the empty string "" will be returned.
-
 string hasData(string s) {
     auto found_null = s.find("null");
     auto b1 =  s.find_first_of("[");
@@ -102,9 +101,10 @@ int main() {
                     std::istream_iterator<float>(),
                     std::back_inserter(y_sense)); 
 
-                    for (int i = 0; i < x_sense.size(); ++i) {
+                    for (unsigned int i = 0; i < x_sense.size(); ++i) {
                         LandmarkObs obs;
-                        obs = {.x = x_sense[i], .y = y_sense[i]};
+                        obs.x = x_sense[i];
+                        obs.y = y_sense[i];
 
                         noisy_observations.push_back(obs);
                     }
@@ -147,7 +147,8 @@ int main() {
                     msgJson["best_particle_sense_x"] = pf.getSenseCoord(best_particle, "X");
                     msgJson["best_particle_sense_y"] = pf.getSenseCoord(best_particle, "Y");
 
-                    auto msg = "42[\"best particle\"," + msgJson.dump() + "]";
+                    auto msg = "42[\"best_particle\"," + msgJson.dump() + "]";
+                    
                     std::cout << msg << std::endl;
 
                     ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
@@ -160,6 +161,10 @@ int main() {
             }
         } // end websocket message if
     }); // end h.onMessage
+
+    h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
+    std::cout << "Connected!!!" << std::endl;
+    });
 
     h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code,
                             char *message, size_t length) {

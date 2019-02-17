@@ -42,10 +42,10 @@ void ParticleFilter:: init (double x, double y, double theta, double std[]) {
         struct Particle p = {.id=i, .x=dist_x(gen), .y=dist_y(gen), .theta=dist_theta(gen), .weight= 1.0};
         // Add particle to the set of particles
         particles.push_back(p);
-
+        /*
         std::cout << "Particle: id " << p.id <<" x: " <<
             p.x << " y: "<< p.y << " theta: " << p.theta <<
-            " weight: "<< p.weight << std::endl;
+            " weight: "<< p.weight << std::endl;*/
     }
 
     is_initialized = true;
@@ -59,26 +59,33 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
     double value_y;
     double value_theta;
 
+    //std::cout << "Here is velocity and yaw rate: " << velocity << " , " << yaw_rate << std::endl; 
     for (unsigned int i = 0; i < particles.size(); ++i) {
         // Stores particle i in variable
         struct Particle p = particles[i];
 
         // Predicts new values for x,y,z based on the bicycle motion model 
         // using velocity and yaw rate values
-        value_x = p.x + (velocity/yaw_rate)*(std::sin(p.theta+yaw_rate*delta_t) -std::sin(p.theta));
-        value_y = p.y +(velocity/yaw_rate)*(std::cos(p.theta)-std::cos(p.theta+yaw_rate*delta_t));
+        if (yaw_rate != 0.0) {
+            value_x = p.x + (velocity/yaw_rate)*(std::sin(p.theta+yaw_rate*delta_t) - std::sin(p.theta));
+            value_y = p.y +(velocity/yaw_rate)*(std::cos(p.theta)-std::cos(p.theta+yaw_rate*delta_t));
+        } else {
+            value_x = p.x + velocity*delta_t*std::cos(p.theta);
+            value_y = p.y + velocity*delta_t*std::sin(p.theta);
+        }
+        
         value_theta = p.theta + yaw_rate*delta_t;
 
         //Add noise around each predicted value using the standard deviation vector
         //Normal gaussian distribution for x, y and theta
-        normal_distribution<double> dist_x(value_x, std_pos[0]);
-        normal_distribution<double> dist_y(value_y, std_pos[1]);
-        normal_distribution<double> dist_theta(value_theta, std_pos[2]);
+        //normal_distribution<double> dist_x(value_x, std_pos[0]);
+        //normal_distribution<double> dist_y(value_y, std_pos[1]);
+        //normal_distribution<double> dist_theta(value_theta, std_pos[2]);
 
         // Updates x,y and theta values with the new predictions
-        particles[i].x = dist_x(gen);
-        particles[i].y = dist_y(gen);
-        particles[i].theta = dist_theta(gen);
+        particles[i].x = value_x;//dist_x(gen);
+        particles[i].y = value_y;//dist_y(gen);
+        particles[i].theta = value_theta;//dist_theta(gen);
         /*
         std::cout << "Particle: id " << particles[i].id <<" x: " <<
             particles[i].x << " y: "<< particles[i].y << " theta: " << particles[i].theta <<
@@ -88,7 +95,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
     
 }
 
-void ParticleFilter::dataAssociation(Particle& particle, vector<LandmarkObs> predicted,
+void ParticleFilter::dataAssociation(Particle &particle, vector<LandmarkObs> predicted,
                                      vector<LandmarkObs> observations) {
     /**
      * Find the predicted measurement that is closest to each observed measurement
@@ -110,7 +117,7 @@ void ParticleFilter::dataAssociation(Particle& particle, vector<LandmarkObs> pre
 
         // Define landmark association for a given xm,ym observation
         int chosen_landmark;
-        double current_distance = 1000.0;
+        double current_distance = 100000.0;
         double distance;
         
         for (unsigned int j = 0; j < predicted.size(); ++j) {
@@ -188,8 +195,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         for (unsigned int i = 0; i < observations_map.size(); ++i) {
             std::cout << "id " << observations_map[i].id <<" x: " <<
             observations_map[i].x << " y: "<< observations_map[i].y << std::endl;
-        }*/
-        
+        }
+        */
 
         dataAssociation(particles[i] , predicted, observations_map); 
         /*
@@ -223,13 +230,15 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
             mean_y = map_landmarks.landmark_list[particles[i].associations[j]].y_f;
             x_obs = particles[i].sense_x[j];
             y_obs = particles[i].sense_y[j];
-            //std::cout << "Weight evolution: " <<
-            //std::setprecision (std::numeric_limits<double>::digits10 + 1) << new_weight << std::endl;
+            //std::cout << "Values: " << std_landmark[0] << std_landmark[1] << mean_x << mean_y << x_obs << y_obs << std::endl; 
+            //std::cout << mean_x << mean_y << x_obs << y_obs << std::endl; 
+
             new_weight *= multi_gaussian(std_landmark[0], std_landmark[1], mean_x, mean_y, x_obs, y_obs);
         }
 
         particles[i].weight = new_weight;
         total_w += new_weight;
+        //std::cout << "Weight evolution: " << new_weight << std::endl;
     }
     
     /*
@@ -253,9 +262,8 @@ void ParticleFilter::resample() {
     double max_weight = -1.0;
     for (unsigned int i = 0; i < particles.size(); ++i) {
         if (particles[i].weight > max_weight) {
-            std::cout << "weigth: " << particles[i].weight<< " and max: " << max_weight <<std::endl;
             max_weight = particles[i].weight;
-            std::cout << "Bingo!" << std::endl;
+            //std::cout << "Bingo!" << std::endl;
         }
     }
     
@@ -275,7 +283,7 @@ void ParticleFilter::resample() {
     particles = new_particles;
 }
 
-void ParticleFilter::SetAssociations(Particle& particle, 
+void ParticleFilter::SetAssociations(Particle &particle, 
                                      const vector<int>& associations,
                                      const vector<double>& sense_x,
                                      const vector<double>& sense_y) {

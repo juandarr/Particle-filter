@@ -27,6 +27,7 @@ string hasData(string s) {
 }
 
 int main() {
+
     uWS::Hub h ;
 
     // Set up parameters here
@@ -137,6 +138,7 @@ int main() {
                     std::cout << "average w " << weight_sum/num_particles << std::endl;
 
                     json msgJson;
+                    std::cout << "best particle id: " << best_particle.id << std::endl;
                     msgJson["best_particle_x"] = best_particle.x;
                     msgJson["best_particle_y"] = best_particle.y;
                     msgJson["best_particle_theta"] = best_particle.theta;

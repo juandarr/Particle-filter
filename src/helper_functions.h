@@ -256,7 +256,7 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
 inline double multi_gaussian(double std_x, double std_y, double ux, double uy, double x, double y) {
     // Define normalization factor in multivariate gaussian distribution
     double normalization;
-    normalization = 1/(2 * M_PI * std_x * std_y);
+    normalization = 1.0/(2.0 * M_PI * std_x * std_y);
 
     // Define exponent of multivariate gaussian distribution
     double exponent;

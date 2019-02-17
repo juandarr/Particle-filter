@@ -76,52 +76,43 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
     
 }
 
-void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
+void ParticleFilter::dataAssociation(Particle& particle, vector<LandmarkObs> predicted,
                                      vector<LandmarkObs> observations) {
     /**
      * Find the predicted measurement that is closest to each observed measurement
      *  and assign the observed measurement to this particular landmark.
      */
 
+    // Define x and y arrays for observations transformed to map coordinate system
+    std::vector<double> sense_x;
+    std::vector<double> sense_y;
     
-    // Transform each observation x,y coordinates from car frame of reference to map
-    for (int i = 0; i < particles.size(); ++i) {
-        
-        // Define x and y arrays for observations transformed to map coordinate system
-        std::vector<double> sense_x;
-        std::vector<double> sense_y;
-        // Define each coordinate in map coordinate system
-        double xm;
-        double ym;
-        // Define array of associations
-        std::vector<int> associations;
-        
-        for (int j = 0; j < observations.size(); ++j) {
-            // Observation x from car to map coordinate system
-            xm = particles[i].x + (std::cos(particles[i].theta) * observations[j].x) - (std::sin(particles[i].theta) * observations[j].y);
-            sense_x.push_back(xm);
-            // Observation y from car to map coordinate system
-            ym = particles[i].y + (std::sin(particles[i].theta) * observations[j].x) + (std::cos(particles[i].theta) * observations[j].y);
-            sense_y.push_back(ym);
+    // Define array of associations
+    std::vector<int> associations;
+    
+    for (int i = 0; i < observations.size(); ++i) {
+        // Observation x from car to map coordinate system
+        sense_x.push_back(observations[i].x);
+        // Observation y from car to map coordinate system
+        sense_y.push_back(observations[i].y);
 
-            // Define landmark association for a given xm,ym observation
-            int chosen_landmark;
-            double current_distance = 1000.0;
-            double distance;
-            
-            for (int z = 0; z < predicted.size(); ++z) {
-                distance = dist(xm,ym, predicted[z].x, predicted[z].y); 
-                if ( distance < current_distance) {
-                    chosen_landmark = predicted[z].id;
-                    current_distance = distance; 
-                }
+        // Define landmark association for a given xm,ym observation
+        int chosen_landmark;
+        double current_distance = 1000.0;
+        double distance;
+        
+        for (int j = 0; j < predicted.size(); ++j) {
+            distance = dist(observations[i].x,observations[i].y, predicted[j].x, predicted[j].y); 
+            if ( distance < current_distance) {
+                chosen_landmark = predicted[j].id;
+                current_distance = distance; 
             }
-
-            associations.push_back(chosen_landmark);
         }
 
-        SetAssociations(particles[i], associations, sense_x, sense_y);
+        associations.push_back(chosen_landmark);
     }
+
+    SetAssociations(particle, associations, sense_x, sense_y);
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
@@ -131,26 +122,83 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
      * Update the weights of each particle using a multivariate Gaussian
      * distribution.
      */
-     double new_weight;
-     double mean_x;
-     double mean_y;
-     double x_obs;
-     double y_obs;
+    
+    // 1. Association of each observation point to the nearest predicted landmark
 
-     for (int i = 0; i < particles.size(); ++i) {
-         
-         new_weight = 1.0;
-         for (int j = 0; j < particles[i].associations.size(); ++j) {
-             mean_x = map_landmarks.landmark_list[particles[i].associations[j]].x_f;
-             mean_y = map_landmarks.landmark_list[particles[i].associations[j]].y_f;
-             x_obs = particles[i].sense_x[j];
-             y_obs = particles[i].sense_y[j];
-             new_weight *= multi_gaussian(std_landmark[0], std_landmark[1], mean_x, mean_y, x_obs, y_obs);
-         }
+    // Transform each observation x,y coordinates from car frame of reference to map
+    for (int i = 0; i < particles.size(); ++i) {
 
-         particles[i].weight = new_weight;
-     }
+        // Define each coordinate in map coordinate system
+        double xm;
+        double ym;
 
+        // Define array of observations from particle in map coordinate system
+        std::vector<LandmarkObs> observations_map;
+        LandmarkObs observation;
+
+        for (int j = 0; j < observations.size(); ++j) {
+
+            // Observation x from car to map coordinate system
+            xm = particles[i].x + (std::cos(particles[i].theta) * observations[j].x) - (std::sin(particles[i].theta) * observations[j].y);
+            // Observation y from car to map coordinate system
+            ym = particles[i].y + (std::sin(particles[i].theta) * observations[j].x) + (std::cos(particles[i].theta) * observations[j].y);
+            
+            observation = {.x = xm, .y=ym};
+            
+            observations_map.push_back(observation);
+        }
+
+        // Define array of observations from particle in map coordinate system
+        std::vector<LandmarkObs> predicted;
+        LandmarkObs predicted_lm;
+        // Define distance between each particle and map landmark to store only landmarks within sensor range
+        double distance;
+
+        for (int z = 0; z < map_landmarks.landmark_list.size(); ++z) {
+
+            distance = dist(particles[i].x, particles[i].y, map_landmarks.landmark_list[z].x_f, map_landmarks.landmark_list[z].y_f); 
+            if ( distance <= sensor_range ) {
+                predicted_lm = {.id =map_landmarks.landmark_list[z].id_i, .x= map_landmarks.landmark_list[z].x_f, .y = map_landmarks.landmark_list[z].y_f };
+                predicted.push_back(predicted_lm);
+            }
+        }
+
+        dataAssociation(particles[i] , predicted, observations_map); 
+
+    }
+
+    // 2. Calculate new weights based on the associations and how 
+    // likely is that configuration to be the real agent location by the product 
+    // of the probabilities
+
+     // Total weight sum for all particles
+    double total_w = 0;
+
+    double new_weight;
+    double mean_x;
+    double mean_y;
+    double x_obs;
+    double y_obs;
+
+   
+    for (int i = 0; i < particles.size(); ++i) {
+        
+        new_weight = 1.0;
+        for (int j = 0; j < particles[i].associations.size(); ++j) {
+            mean_x = map_landmarks.landmark_list[particles[i].associations[j]].x_f;
+            mean_y = map_landmarks.landmark_list[particles[i].associations[j]].y_f;
+            x_obs = particles[i].sense_x[j];
+            y_obs = particles[i].sense_y[j];
+            new_weight *= multi_gaussian(std_landmark[0], std_landmark[1], mean_x, mean_y, x_obs, y_obs);
+        }
+
+        particles[i].weight = new_weight;
+        total_w += new_weight;
+    }
+
+    for (int i = 0; i < particles.size(); ++i) {
+        particles[i].weight /= total_w;
+    }
 }
 
 void ParticleFilter::SetAssociations(Particle& particle, 

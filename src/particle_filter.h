@@ -61,7 +61,7 @@ class ParticleFilter {
          * @param predicted Vector of predicted landmark observations
          * @param observations Vector of landmark observations
          */
-        void dataAssociation(std::vector<LandmarkObs> predicted,
+        void dataAssociation(Particle& particle, std::vector<LandmarkObs> predicted,
                              std::vector<LandmarkObs> observations);
 
         /**
@@ -99,7 +99,7 @@ class ParticleFilter {
          */
         std::string getAssociations(Particle best);
         std::string getSenseCoord(Particle best, std::string coord);
-           
+
         // Set of current particles
         std::vector<Particle> particles;
 

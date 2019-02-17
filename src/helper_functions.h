@@ -246,7 +246,26 @@ inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& o
     }
 
     return true;
-
 } 
+
+/**
+ * Calculates the multivariate gaussian probability given the standard deviation, 
+ * landmark location and observation in x/y dimensions
+ */  
+double multi_gaussian(double std_x, double std_y, double ux, double uy, double x, double y) {
+    // Define normalization factor in multivariate gaussian distribution
+    double normalization;
+    normalization = 1/(2 * M_PI * std_x * std_y);
+
+    // Define exponent of multivariate gaussian distribution
+    double exponent;
+    exponent = (pow(x-ux, 2)/(2*pow(std_x,2))+pow(y-uy, 2)/(2*pow(std_y,2)));
+
+    // Define probability given the normalization factor and the exponent
+    double weight;
+    weight = normalization * exp(-exponent);
+
+    return weight;
+}
 
 #endif // HELPER_FUNCTIONS_H_

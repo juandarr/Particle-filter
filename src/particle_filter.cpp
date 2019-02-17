@@ -122,6 +122,34 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
 
         SetAssociations(particles[i], associations, sense_x, sense_y);
     }
+}
+
+void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
+                                   const vector<LandmarkObs> &observations,
+                                   const Map &map_landmarks) {
+    /**
+     * Update the weights of each particle using a multivariate Gaussian
+     * distribution.
+     */
+     double new_weight;
+     double mean_x;
+     double mean_y;
+     double x_obs;
+     double y_obs;
+
+     for (int i = 0; i < particles.size(); ++i) {
+         
+         new_weight = 1.0;
+         for (int j = 0; j < particles[i].associations.size(); ++j) {
+             mean_x = map_landmarks.landmark_list[particles[i].associations[j]].x_f;
+             mean_y = map_landmarks.landmark_list[particles[i].associations[j]].y_f;
+             x_obs = particles[i].sense_x[j];
+             y_obs = particles[i].sense_y[j];
+             new_weight *= multi_gaussian(std_landmark[0], std_landmark[1], mean_x, mean_y, x_obs, y_obs);
+         }
+
+         particles[i].weight = new_weight;
+     }
 
 }
 

@@ -172,7 +172,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // of the probabilities
 
      // Total weight sum for all particles
-    double total_w = 0;
+    double total_w = 0.0;
 
     double new_weight;
     double mean_x;

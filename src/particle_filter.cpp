@@ -29,7 +29,7 @@ std::default_random_engine gen;
 
 void ParticleFilter:: init (double x, double y, double theta, double std[]) {
 
-    num_particles = 1000;
+    num_particles = 100;
 
     //Normal gaussian distribution for x, y and theta
     normal_distribution<double> dist_x(x, std[0]);
@@ -79,9 +79,61 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
                                      vector<LandmarkObs> observations) {
     /**
-     * Find the predicted measurements that is closest to each observed measurement
+     * Find the predicted measurement that is closest to each observed measurement
      *  and assign the observed measurement to this particular landmark.
      */
 
+    
+    // Transform each observation x,y coordinates from car frame of reference to map
+    for (int i = 0; i < particles.size(); ++i) {
+        
+        // Define x and y arrays for observations transformed to map coordinate system
+        std::vector<double> sense_x;
+        std::vector<double> sense_y;
+        // Define each coordinate in map coordinate system
+        double xm;
+        double ym;
+        // Define array of associations
+        std::vector<int> associations;
+        
+        for (int j = 0; j < observations.size(); ++j) {
+            // Observation x from car to map coordinate system
+            xm = particles[i].x + (std::cos(particles[i].theta) * observations[j].x) - (std::sin(particles[i].theta) * observations[j].y);
+            sense_x.push_back(xm);
+            // Observation y from car to map coordinate system
+            ym = particles[i].y + (std::sin(particles[i].theta) * observations[j].x) + (std::cos(particles[i].theta) * observations[j].y);
+            sense_y.push_back(ym);
+
+            // Define landmark association for a given xm,ym observation
+            int chosen_landmark;
+            double current_distance = 1000.0;
+            double distance;
+            
+            for (int z = 0; z < predicted.size(); ++z) {
+                distance = dist(xm,ym, predicted[z].x, predicted[z].y); 
+                if ( distance < current_distance) {
+                    chosen_landmark = predicted[z].id;
+                    current_distance = distance; 
+                }
+            }
+
+            associations.push_back(chosen_landmark);
+        }
+
+        SetAssociations(particles[i], associations, sense_x, sense_y);
+    }
+
 }
 
+void ParticleFilter::SetAssociations(Particle& particle, 
+                                     const vector<int>& associations,
+                                     const vector<double>& sense_x,
+                                     const vector<double>& sense_y) {
+    // @param particle The particle to which assign each list association
+    //      and associations (x,y) in map coordinate system
+    // @param sense_x The associations x mapping already converted to map coordinates
+    // @param sense_y The associations y mapping already converted to map coordinates
+    particle.associations = associations;
+    particle.sense_x = sense_x;
+    particle.sense_y = sense_y;
+}

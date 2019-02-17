@@ -201,6 +201,41 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     }
 }
 
+void ParticleFilter::resample() {
+    /**
+     * Resample particles with replacement with probability 
+     * proportional to their weight
+     */
+    vector<Particle> new_particles;
+
+    std::uniform_int_distribution<int> distribution_int(1,particles.size());
+
+    int index = distribution_int(gen) - 1;
+    double beta = 0;
+
+    double max_weight = -1.0;
+    for (int i = 0; i < particles.size(); ++i) {
+        if (particles[i].weight > max_weight) {
+            max_weight = particles[i].weight;
+        }
+    }
+    
+    std::uniform_real_distribution<double> distribution(0.0,2*max_weight);
+    for (int i = 0; i < particles.size(); ++i) {
+        beta += distribution(gen);
+
+        while (particles[index].weight < beta) {
+            beta -= particles[index].weight;
+            index += index;
+            if (index == particles.size()) index = 0;
+        }
+
+        new_particles.push_back(particles[index]);
+    }
+
+    particles = new_particles;
+}
+
 void ParticleFilter::SetAssociations(Particle& particle, 
                                      const vector<int>& associations,
                                      const vector<double>& sense_x,
@@ -212,4 +247,29 @@ void ParticleFilter::SetAssociations(Particle& particle,
     particle.associations = associations;
     particle.sense_x = sense_x;
     particle.sense_y = sense_y;
+}
+
+string ParticleFilter::getAssociations(Particle best) {
+    vector<int> v = best.associations;
+    std::stringstream ss;
+    copy(v.begin(), v.end(), std::ostream_iterator<int>(ss, " "));
+    string s = ss.str();
+    s = s.substr(0, s.length()-1); // Get rid of the trailing space
+    return s;
+}
+
+string ParticleFilter::getSenseCoord(Particle best, string coord) {
+    vector<double> v;
+
+    if (coord == "X") {
+        v = best.sense_x;
+    } else {
+        v = best.sense_y;
+    }
+
+    std::stringstream ss;
+    copy(v.begin(), v.end(), std::ostream_iterator<int>(ss, " "));
+    string s = ss.str();
+    s = s.substr(0, s.length()-1); // Get rid of the trailing space
+    return s;
 }

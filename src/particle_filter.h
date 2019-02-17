@@ -78,6 +78,12 @@ class ParticleFilter {
                             const Map &map_landmarks);
 
         /**
+         * resample Resamples from the updated set of particles to form 
+         *  the new set of particles
+         */
+        void resample();
+
+        /**
          * initialized Returns whether particle filter is initialized yet or not
          */
         const bool initialized() {

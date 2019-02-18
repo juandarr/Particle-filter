@@ -241,9 +241,9 @@ void ParticleFilter::resample() {
         }
     }
     
-    std::uniform_real_distribution<double> distribution_real(0.0,max_weight);
+    std::uniform_real_distribution<double> distribution_real(0.0,2.0*max_weight);
     for (unsigned int i = 0; i < particles.size(); ++i) {
-        beta += 2.0*distribution_real(gen);
+        beta += distribution_real(gen);
 
         while (particles[index].weight < beta) {
             beta -= particles[index].weight;

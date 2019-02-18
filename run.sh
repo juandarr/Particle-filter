@@ -4,4 +4,4 @@
 
 # Run particle filter
 cd ./build
-./particle_filter
+./particle_filter 

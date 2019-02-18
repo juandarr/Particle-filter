@@ -11,7 +11,7 @@ using std::string;
 using std::vector;
 
 // Checks if the SocketIO event has JSON data.
-// If there is data then JSON object in string format will be returned,
+// If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
 string hasData(string s) {
     auto found_null = s.find("null");
@@ -56,7 +56,7 @@ int main() {
         //"42" at the start of the message means there's a websocket message event.
         // The 4 signifies a websocket message
         // The 2 signifies a websocket event
-        if (length && length > 3 && data[0] == '4' && data[1] == '2') {
+        if (length && length > 2 && data[0] == '4' && data[1] == '2') {
             auto s = hasData(string(data));
 
             if (s != ""){
@@ -138,7 +138,7 @@ int main() {
                     std::cout << "average w " << weight_sum/num_particles << std::endl;
 
                     json msgJson;
-                    std::cout << "best particle id: " << best_particle.id << std::endl;
+                    
                     msgJson["best_particle_x"] = best_particle.x;
                     msgJson["best_particle_y"] = best_particle.y;
                     msgJson["best_particle_theta"] = best_particle.theta;
@@ -176,7 +176,7 @@ int main() {
 
     int port = 4567;
     if (h.listen(port)) {
-        std::cout << "Listen to port " << port << std::endl;
+        std::cout << "Listening to port " << port << std::endl;
     } else {
         std::cerr << "Failed to listen to port" << std::endl;
         return -1;

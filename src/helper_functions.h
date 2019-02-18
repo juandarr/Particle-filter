@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+
 #include "map.h"
 
 // for portability of M_PI (V. Studio, MinGW, etc.)
@@ -69,11 +70,11 @@ inline double * getError (double gt_x, double gt_y, double gt_theta, double pf_x
                             double pf_y, double pf_theta) {
     static double error[3];
     error[0] = fabs(pf_x -gt_x);
-    error[1] = fabs(gt_y-pf_y);
-    error[2] = fabs(gt_theta - pf_theta);
+    error[1] = fabs(pf_y-gt_y);
+    error[2] = fabs(pf_theta-gt_theta);
     error[2] = fmod(error[2], 2.0 * M_PI);
     if (error[2] > M_PI) {
-        error[2] =  2 * M_PI - error[2];
+        error[2] =  2.0 * M_PI - error[2];
     }
     return error;
 }

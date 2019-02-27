@@ -35,7 +35,7 @@ Once the install for uWebSocketIO is complete, the main program can be built and
 
  - ./clean.sh
 
-After running the program, open the siumulator. You should get a `connected` message in the terminal output, meaning the simulator is connected to the server program and is ready to run. 
+After running the program, open the simulator. You should get a `connected` message in the terminal output, meaning the simulator is connected to the server program and is ready to run. 
 
 ## Data flow 
 
